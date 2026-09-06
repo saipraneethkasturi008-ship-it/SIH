@@ -9,7 +9,8 @@ import { getLocalizedScheme } from '../data/schemeTranslations.js';
 // ============================================================
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
 
 export const API = axios.create({
   baseURL: API_BASE_URL,

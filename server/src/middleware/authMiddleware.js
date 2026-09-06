@@ -25,7 +25,7 @@ const authMiddleware = (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET || "vyapar-mitra-jwt-default-secret-key-2026"
     );
 
     // Store user information in request

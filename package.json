@@ -1,0 +1,14 @@
+{
+  "name": "vyapar-mitra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VyaparMitra - Business Partner in Your Language",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm install --prefix client && npm run build --prefix client && npm install --prefix server",
+    "start": "node server/src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

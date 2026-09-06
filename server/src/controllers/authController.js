@@ -77,9 +77,10 @@ const register = async (req, res) => {
     }
 
     // Create JWT immediately after registration
+    const jwtSecret = process.env.JWT_SECRET || "vyapar-mitra-jwt-default-secret-key-2026";
     const token = jwt.sign(
       { userId: newUser.id },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: "7d" }
     );
 
@@ -167,9 +168,10 @@ const login = async (req, res) => {
     }
 
     // Create JWT
+    const jwtSecret = process.env.JWT_SECRET || "vyapar-mitra-jwt-default-secret-key-2026";
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: "7d" }
     );
 
