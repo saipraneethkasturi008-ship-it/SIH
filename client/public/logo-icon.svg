@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Vyapar Mitra icon</title>
+  <desc id="desc">A geometric VM monogram with an integrated rising growth stroke</desc>
+  <rect width="96" height="96" rx="22" fill="#EDF4E4"/>
+  <path d="M20 29 34 68 48 29" fill="none" stroke="#405D58" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46 68V31l15 22 15-22v37" fill="none" stroke="#6F9780" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M57 49c7-4 13-10 19-20" fill="none" stroke="#D29A65" stroke-width="4" stroke-linecap="round"/>
+  <path d="m70 29 7 0-3 7" fill="none" stroke="#D29A65" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

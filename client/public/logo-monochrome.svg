@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 128" role="img" aria-labelledby="title">
+  <title id="title">Vyapar Mitra monochrome logo</title>
+  <g transform="translate(8 16)" fill="none" stroke="#405D58" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect width="96" height="96" rx="22" fill="#fff"/>
+      <path d="M20 29 34 68 48 29" stroke-width="9"/>
+      <path d="M46 68V31l15 22 15-22v37" stroke-width="9"/>
+      <path d="M57 49c7-4 13-10 19-20" stroke-width="4"/>
+      <path d="m70 29 7 0-3 7" stroke-width="4"/>
+  </g>
+  <text x="128" y="60" fill="#405D58" font-family="Georgia, serif" font-size="37" font-weight="700">Vyapar Mitra</text>
+  <text x="130" y="88" fill="#405D58" font-family="Arial, sans-serif" font-size="15" letter-spacing="1">YOUR AI BUSINESS COMPANION</text>
+</svg>
