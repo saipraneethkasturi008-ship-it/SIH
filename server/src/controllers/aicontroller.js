@@ -1,8 +1,70 @@
-const { Ollama } = require("ollama");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const supabase = require("../config/supabase");
 const { retrieveKnowledge } = require("../services/ragService");
 
-const ollama = new Ollama();
+const CANDIDATE_MODELS = [
+  process.env.GEMINI_MODEL,
+  "gemini-3.5-flash",
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite"
+];
+
+const generateGeminiContent = async ({ prompt, systemInstruction, isJson = false }) => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error(
+      "GEMINI_API_KEY is not configured. Please set GEMINI_API_KEY in your server/.env file."
+    );
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey.trim());
+  const modelsToTry = [...new Set(CANDIDATE_MODELS.filter(Boolean))];
+
+  let lastError;
+  for (const modelName of modelsToTry) {
+    try {
+      const modelConfig = {
+        model: modelName
+      };
+
+      if (systemInstruction) {
+        modelConfig.systemInstruction = systemInstruction;
+      }
+
+      if (isJson) {
+        modelConfig.generationConfig = {
+          responseMimeType: "application/json"
+        };
+      }
+
+      const model = genAI.getGenerativeModel(modelConfig);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (err) {
+      lastError = err;
+      const isTransient =
+        err?.status === 503 ||
+        err?.status === 429 ||
+        err?.status === 500 ||
+        err?.message?.includes("fetch failed") ||
+        err?.message?.includes("ECONNRESET") ||
+        err?.message?.includes("ETIMEDOUT") ||
+        err?.message?.includes("Service Unavailable") ||
+        err?.message?.includes("high demand");
+
+      if (isTransient) {
+        console.warn(
+          `Gemini model ${modelName} encountered transient error (${err?.status || err.message}). Trying next available fallback model...`
+        );
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError;
+};
 
 
 // =====================================================
@@ -238,17 +300,12 @@ Official source URL: ${item.source_url || "N/A"}`
 
 
     // -----------------------------------
-    // 9. Send request to Ollama
+    // 9. Send request to Gemini
     // -----------------------------------
 
-    console.log("Sending request to Ollama...");
+    console.log("Sending request to Gemini...");
 
-    const response = await ollama.chat({
-      model: "llama3.2",
-      messages: [
-        {
-          role: "system",
-          content: `
+    const systemPrompt = `
 You are a helpful AI business assistant for rural micro-entrepreneurs in India.
 
 ${languageInstruction}
@@ -288,29 +345,23 @@ ${businessContext}
 
 Retrieved knowledge from the Udyami Mitra knowledge base:
 ${ragContext}
-`
-        },
-        {
-          role: "user",
-          content: message.trim()
-        }
-      ]
-    });
+`;
 
-    console.log("Ollama response received.");
+    const answer = (await generateGeminiContent({
+      prompt: message.trim(),
+      systemInstruction: systemPrompt
+    }))?.trim();
+
+    console.log("Gemini response received.");
 
 
     // -----------------------------------
-    // 10. Validate Ollama response
+    // 10. Validate Gemini response
     // -----------------------------------
-
-    const answer =
-      response?.message?.content?.trim();
 
     if (!answer) {
       console.error(
-        "Ollama returned an empty response:",
-        response
+        "Gemini returned an empty response."
       );
 
       return res.status(500).json({
@@ -361,7 +412,7 @@ ${ragContext}
 
   } catch (error) {
     console.error(
-      "Ollama AI error:",
+      "Gemini AI error:",
       error
     );
 
@@ -574,38 +625,27 @@ FINAL CHECK BEFORE RESPONDING:
 `;
 
     // -----------------------------------
-    // 4. Send request to Ollama
+    // 4. Send request to Gemini
     // -----------------------------------
 
     console.log(
-      "Sending business recommendation request to Ollama..."
+      "Sending business recommendation request to Gemini..."
     );
 
-    const response = await ollama.chat({
-      model: "llama3.2",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a strict JSON-generating business recommendation engine for rural India. Always follow the user's selected category."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
+    let rawAnswer = (await generateGeminiContent({
+      prompt,
+      systemInstruction:
+        "You are a strict JSON-generating business recommendation engine for rural India. Always follow the user's selected category.",
+      isJson: true
+    }))?.trim();
 
     console.log(
-      "Business recommendation Ollama response received."
+      "Business recommendation Gemini response received."
     );
 
     // -----------------------------------
     // 5. Get AI response text
     // -----------------------------------
-
-    let rawAnswer =
-      response?.message?.content?.trim();
 
     if (!rawAnswer) {
       return res.status(500).json({
@@ -632,7 +672,7 @@ FINAL CHECK BEFORE RESPONDING:
       recommendation = JSON.parse(rawAnswer);
     } catch (parseError) {
       console.error(
-        "Failed to parse Ollama recommendation JSON:"
+        "Failed to parse Gemini recommendation JSON:"
       );
       console.error(rawAnswer);
 
@@ -796,21 +836,14 @@ Use exactly this structure:
 Provide exactly 3 opportunities.
 `;
 
-    console.log("Sending business area AI request to Ollama...");
+    console.log("Sending business area AI request to Gemini...");
 
-    const response = await ollama.chat({
-      model: "llama3.2",
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
+    let rawAnswer = (await generateGeminiContent({
+      prompt,
+      isJson: true
+    }))?.trim();
 
     console.log("Business area AI response received.");
-
-    let rawAnswer = response?.message?.content?.trim();
 
     if (!rawAnswer) {
       return res.status(500).json({
@@ -819,7 +852,7 @@ Provide exactly 3 opportunities.
       });
     }
 
-    // Remove accidental markdown fences if Ollama adds them.
+    // Remove accidental markdown fences if Gemini adds them.
     rawAnswer = rawAnswer
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")
@@ -869,7 +902,8 @@ Provide exactly 3 opportunities.
 
     return res.status(500).json({
       success: false,
-      message: "Failed to generate AI business opportunities."
+      message: "Failed to generate AI business opportunities.",
+      error: error.message
     });
   }
 };
@@ -969,27 +1003,16 @@ Use exactly this structure:
 }
 `;
 
-    console.log("Sending marketing request to Ollama...");
+    console.log("Sending marketing request to Gemini...");
 
-    const response = await ollama.chat({
-      model: "llama3.2",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a marketing content generator for rural Indian micro-entrepreneurs. Return only valid JSON."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
+    let rawAnswer = (await generateGeminiContent({
+      prompt,
+      systemInstruction:
+        "You are a marketing content generator for rural Indian micro-entrepreneurs. Return only valid JSON.",
+      isJson: true
+    }))?.trim();
 
-    console.log("Marketing Ollama response received.");
-
-    let rawAnswer =
-      response?.message?.content?.trim();
+    console.log("Marketing Gemini response received.");
 
     if (!rawAnswer) {
       return res.status(500).json({
