@@ -2,6 +2,7 @@ import axios from 'axios';
 
 import { GOVERNMENT_SCHEMES } from '../data/schemesData.js';
 import { SAMPLE_RECOMMENDATION } from '../data/mockData.js';
+import { getLocalizedScheme } from '../data/schemeTranslations.js';
 
 // ============================================================
 // API CONFIGURATION
@@ -29,6 +30,9 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const lang = localStorage.getItem('vm_language') || 'te';
+    config.headers['Accept-Language'] = lang;
 
     return config;
   },
@@ -474,10 +478,14 @@ export const schemeService = {
     params = {}
   ) => {
     try {
+      const lang = params.lang || localStorage.getItem('vm_language') || 'te';
       return await API.get(
         '/schemes',
         {
-          params
+          params: {
+            ...params,
+            lang
+          }
         }
       );
 
@@ -487,9 +495,9 @@ export const schemeService = {
         'Schemes API unavailable. Using local scheme data.'
       );
 
-      let list = [
-        ...GOVERNMENT_SCHEMES
-      ];
+      let list = GOVERNMENT_SCHEMES.map((scheme) =>
+        getLocalizedScheme(scheme, lang)
+      );
 
       if (
         params.category &&
@@ -755,7 +763,78 @@ export const aiService = {
             'Marketing copy generated successfully'
         };
       }
+    },
+
+  // ----------------------------------------------------------
+  // GENERATE PRODUCT IMAGE
+  // POST /api/ai/product-image
+  // ----------------------------------------------------------
+
+  generateProductImage: async (imageInputs) => {
+    try {
+      const res = await API.post(
+        '/ai/product-image',
+        imageInputs
+      );
+
+      if (res?.imageUrl) {
+        return res;
+      }
+    } catch (error) {
+      console.warn(
+        'Product image AI API unavailable. Generating local vector art illustration.',
+        error
+      );
     }
+
+    const { product = 'Product', discount = '' } = imageInputs;
+    const safeProduct = String(product).replace(/[<>&"]/g, '');
+    const safeDiscount = discount ? String(discount).replace(/[<>&"]/g, '') : '';
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+      <defs>
+        <linearGradient id="localArtBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fffbeb"/>
+          <stop offset="50%" stop-color="#fef3c7"/>
+          <stop offset="100%" stop-color="#fed7aa"/>
+        </linearGradient>
+        <radialGradient id="localGlow" cx="50%" cy="45%" r="45%">
+          <stop offset="0%" stop-color="#f97316" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#fed7aa" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="800" height="600" rx="36" fill="url(#localArtBg)"/>
+      <circle cx="400" cy="270" r="220" fill="url(#localGlow)"/>
+      <circle cx="400" cy="260" r="175" fill="#ffffff" stroke="#f59e0b" stroke-width="4" stroke-dasharray="10 5" opacity="0.9"/>
+      <g transform="translate(400, 260) scale(1.15)">
+        <rect x="-70" y="-55" width="140" height="150" rx="28" fill="#ea580c" stroke="#9a3412" stroke-width="5"/>
+        <path d="M -50 -35 Q -30 -35 -30 70 L -45 65 Z" fill="#ffffff" opacity="0.25"/>
+        <path d="M -80 -60 Q 0 -85 80 -60 L 65 -35 Q 0 -45 -65 -35 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="3"/>
+        <rect x="-55" y="-40" width="110" height="10" rx="5" fill="#ca8a04"/>
+        <circle cx="0" cy="25" r="42" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+        <text x="0" y="22" font-size="20" font-family="Arial, sans-serif" font-weight="900" fill="#9a3412" text-anchor="middle">PURE</text>
+        <text x="0" y="42" font-size="14" font-family="Arial, sans-serif" font-weight="bold" fill="#ea580c" text-anchor="middle">100%</text>
+      </g>
+      ${safeDiscount ? `
+      <g transform="translate(610, 190) rotate(12)">
+        <circle cx="0" cy="0" r="50" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+        <text x="0" y="-8" font-size="13" font-family="Arial, sans-serif" font-weight="bold" fill="#fef08a" text-anchor="middle">SPECIAL</text>
+        <text x="0" y="12" font-size="17" font-family="Arial, sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">OFFER</text>
+      </g>` : ''}
+      <rect x="140" y="450" width="520" height="66" rx="33" fill="#c2410c" stroke="#ffffff" stroke-width="3"/>
+      <text x="400" y="492" font-size="28" font-family="Arial, sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">${safeProduct.substring(0, 32)}</text>
+      <text x="400" y="550" font-size="19" font-family="Arial, sans-serif" font-weight="bold" fill="#b45309" text-anchor="middle">★ TRADITIONAL QUALITY • SUPPORT LOCAL ★</text>
+    </svg>`;
+
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const imageUrl = URL.createObjectURL(blob);
+
+    return {
+      success: true,
+      imageUrl,
+      source: 'client-ai-illustration'
+    };
+  }
 };
 
 // ============================================================

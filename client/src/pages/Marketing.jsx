@@ -34,6 +34,7 @@ const Marketing = () => {
 
   const [loading, setLoading] = useState(false);
   const [posterLoading, setPosterLoading] = useState(false);
+  const [generatingAiArt, setGeneratingAiArt] = useState(false);
   const [activeTab, setActiveTab] = useState('whatsapp');
 
   const [content, setContent] = useState({
@@ -331,23 +332,44 @@ const Marketing = () => {
   };
 
   const generatePoster = async () => {
-    if (!productImageUrl) {
-      alert(
-        'Please upload a product photo first.'
-      );
+    if (!product) {
+      alert('Please select a product first.');
       return;
     }
 
     if (!content.posterText) {
-      alert(
-        'Please generate the marketing content first.'
-      );
+      alert('Please generate the marketing content first.');
       return;
     }
 
     setPosterLoading(true);
 
     try {
+      let imageSource = productImageUrl;
+
+      if (!imageSource) {
+        setGeneratingAiArt(true);
+        try {
+          const imgRes = await aiService.generateProductImage({
+            product,
+            discount,
+            prompt: `Authentic commercial product illustration for ${product}${discount ? `, featuring offer: ${discount}` : ''}, professional retail marketing, traditional Indian enterprise aesthetic`
+          });
+
+          if (imgRes?.imageUrl) {
+            imageSource = imgRes.imageUrl;
+          }
+        } catch (imgErr) {
+          console.warn('AI product image generation error, falling back:', imgErr);
+        } finally {
+          setGeneratingAiArt(false);
+        }
+      }
+
+      if (!imageSource) {
+        throw new Error('Unable to obtain or generate product image.');
+      }
+
       const canvas = canvasRef.current;
 
       if (!canvas) {
@@ -496,7 +518,7 @@ const Marketing = () => {
 
       const image =
         await loadImage(
-          productImageUrl
+          imageSource
         );
 
       ctx.save();
@@ -632,6 +654,7 @@ const Marketing = () => {
       );
     } finally {
       setPosterLoading(false);
+      setGeneratingAiArt(false);
     }
   };
 
@@ -745,11 +768,14 @@ const Marketing = () => {
 
               <div className="flex items-center justify-between mb-2">
 
-                <label className="text-xs font-bold text-slate-700">
-
-                  Product Photo
-
-                </label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-slate-700">
+                    Product Photo
+                  </label>
+                  <span className="text-[10px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded-md">
+                    Optional
+                  </span>
+                </div>
 
                 {productImageUrl && (
                   <button
@@ -776,15 +802,11 @@ const Marketing = () => {
                     <Upload className="w-8 h-8 mx-auto text-orange-500 mb-2" />
 
                     <p className="text-sm font-bold text-slate-700">
-
-                      Upload Product Photo
-
+                      Upload Product Photo (Optional)
                     </p>
 
                     <p className="text-xs text-slate-500 mt-1">
-
-                      JPG, PNG or WEBP • Max 8 MB
-
+                      JPG, PNG or WEBP • Leave empty to let AI illustrate your product
                     </p>
 
                   </div>
@@ -961,9 +983,7 @@ const Marketing = () => {
             </div>
 
             <p className="text-xs text-slate-500 mb-3">
-
-              Turn your real product photo and festival offer into a ready-to-share poster.
-
+              Turn your product photo (or AI-generated art) and festival offer into a ready-to-share poster.
             </p>
 
             <button
@@ -971,36 +991,36 @@ const Marketing = () => {
               onClick={generatePoster}
               disabled={
                 posterLoading ||
-                !productImageUrl ||
+                !product ||
                 !content.posterText
               }
               className="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl text-sm shadow-md transition-all flex items-center justify-center gap-2"
             >
 
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className={`w-4 h-4 ${posterLoading ? 'animate-spin' : ''}`} />
 
-              {posterLoading
-                ? 'Creating Poster...'
-                : 'Generate Promotional Poster'}
+              <span>
+                {posterLoading
+                  ? (generatingAiArt
+                      ? 'Generating AI Product Art...'
+                      : 'Designing Poster...')
+                  : 'Generate Promotional Poster'}
+              </span>
 
             </button>
 
             {!productImageUrl && (
-              <p className="text-[11px] text-slate-400 mt-2 text-center">
-
-                Upload a product photo first.
-
+              <p className="text-[11px] text-orange-600 font-medium mt-2 text-center flex items-center justify-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Photo optional: AI will illustrate your product automatically.</span>
               </p>
             )}
 
-            {productImageUrl &&
-              !content.posterText && (
-                <p className="text-[11px] text-slate-400 mt-2 text-center">
-
-                  Generate marketing content first.
-
-                </p>
-              )}
+            {!content.posterText && (
+              <p className="text-[11px] text-slate-400 mt-2 text-center">
+                Generate marketing content above first.
+              </p>
+            )}
 
           </div>
 
@@ -1195,10 +1215,8 @@ const Marketing = () => {
                       </p>
 
                       <p className="text-xs text-orange-700 mt-1">
-
-                        Upload your product photo and click
+                        Upload your product photo (or let AI illustrate your product) and click
                         “Generate Promotional Poster”.
-
                       </p>
 
                     </div>

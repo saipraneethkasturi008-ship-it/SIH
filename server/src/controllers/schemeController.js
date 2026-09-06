@@ -1,7 +1,9 @@
 const supabase = require("../config/supabase");
+const { getLocalizedScheme } = require("../data/schemeTranslations");
 
 const getSchemes = async (req, res) => {
   try {
+    const lang = req.query.lang || req.headers["accept-language"] || "en";
     const { data: schemes, error } = await supabase
       .from("schemes")
       .select("*")
@@ -16,10 +18,14 @@ const getSchemes = async (req, res) => {
       });
     }
 
+    const localizedSchemes = (schemes || []).map((scheme) =>
+      getLocalizedScheme(scheme, lang)
+    );
+
     res.json({
       success: true,
-      count: schemes.length,
-      schemes
+      count: localizedSchemes.length,
+      schemes: localizedSchemes
     });
 
   } catch (error) {
@@ -35,6 +41,7 @@ const getSchemes = async (req, res) => {
 
 const recommendSchemes = async (req, res) => {
   try {
+    const lang = req.query.lang || req.headers["accept-language"] || "en";
     const { businessType } = req.body;
 
     if (!businessType) {
@@ -68,11 +75,15 @@ const recommendSchemes = async (req, res) => {
       );
     });
 
+    const localizedRecommendations = recommendedSchemes.map((scheme) =>
+      getLocalizedScheme(scheme, lang)
+    );
+
     res.json({
       success: true,
       businessType,
-      count: recommendedSchemes.length,
-      recommendations: recommendedSchemes
+      count: localizedRecommendations.length,
+      recommendations: localizedRecommendations
     });
 
   } catch (error) {

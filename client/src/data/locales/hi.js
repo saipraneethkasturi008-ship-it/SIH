@@ -171,16 +171,52 @@ export default {
     copied: "कॉपी हो गया!"
   },
   schemes: {
+    verifiedBadge: "सत्यापित सरकारी योजना स्तर",
     title: "सत्यापित सरकारी योजनाएं और सब्सिडी",
-    subtitle: "सूक्ष्म और छोटे उद्यमियों के लिए केंद्र व राज्य सरकार की आधिकारिक योजनाएं।",
-    searchPlaceholder: "योजना का नाम या व्यापार श्रेणी खोजें...",
-    filterCategory: "श्रेणी फ़िल्टर",
+    subtitle: "सूक्ष्म एवं लघु उद्यमों हेतु सत्यापित पात्रता मापदंडों के साथ आधिकारिक केंद्रीय व राज्य योजनाएं।",
+    searchPlaceholder: "कीवर्ड, व्यवसाय या श्रेणी द्वारा खोजें...",
+    filterCategory: "श्रेणी द्वारा फ़िल्टर करें",
     allCategories: "सभी श्रेणियां",
-    officialSource: "सरकारी पोर्टल लिंक",
-    eligibility: "पात्रता",
-    benefits: "सब्सिडी व लाभ",
-    documents: "आवश्यक दस्तावेज़",
-    explainWithAi: "आसान शब्दों में समझें"
+    schemesAvailable: "योजनाएं उपलब्ध",
+    schemeAvailable: "योजना उपलब्ध",
+    clearSearch: "खोज साफ़ करें",
+    noSchemesFound: "कोई योजना नहीं मिली",
+    noSchemesDesc: "अन्य कीवर्ड का प्रयास करें या भिन्न श्रेणी चुनें।",
+    officialSource: "आधिकारिक पोर्टल",
+    officialSourceUnavailable: "पोर्टल अनुपलब्ध",
+    explainWithAi: "सरल शब्दों में समझें",
+    loading: "सरकारी योजनाएं लोड हो रही हैं...",
+    fetching: "सत्यापित योजनाओं की जानकारी लाई जा रही है।",
+    loadError: "सरकारी योजनाएं लोड करने में असमर्थ। कृपया पुनः प्रयास करें।",
+    tryAgain: "पुनः प्रयास करें",
+    categories: {
+      all: "सभी",
+      smallBusiness: "लघु व्यवसाय एवं व्यापार",
+      manufacturing: "विनिर्माण एवं सेवाएं",
+      artisans: "कारीगर एवं शिल्पकार",
+      women: "महिला ग्रामीण आजीविका",
+      registration: "सामान्य व्यापार पंजीकरण",
+      foodProcessing: "खाद्य प्रसंस्करण"
+    },
+    tags: {
+      allIndia: "संपूर्ण भारत",
+      andhraPradesh: "आंध्र प्रदेश"
+    },
+    card: {
+      maxLoan: "अधिकतम ऋण / अनुदान",
+      subsidy: "सब्सिडी सहायता",
+      keyEligibility: "प्रमुख पात्रता",
+      seePortal: "आधिकारिक पोर्टल देखें"
+    },
+    modal: {
+      aiExplain: "AI सरल व्याख्या",
+      aboutScheme: "इस योजना के बारे में",
+      requiredDocs: "आवश्यक दस्तावेज",
+      benefitsSubsidies: "लाभ एवं सब्सिडी",
+      openPortal: "आधिकारिक पोर्टल खोलें",
+      portalUnavailable: "आधिकारिक पोर्टल जानकारी उपलब्ध नहीं है।",
+      close: "बंद करें"
+    }
   },
   assistant: {
     title: "एआई व्यापार सहायक",

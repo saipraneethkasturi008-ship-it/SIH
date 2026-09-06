@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { schemeService } from '../services/api.js';
+import { getLocalizedScheme } from '../data/schemeTranslations.js';
 import Modal from '../components/common/Modal.jsx';
 
 import {
@@ -34,13 +35,13 @@ const Schemes = () => {
   // CATEGORIES
   // =========================
 
-  const categories = [
-    'All',
-    'Small Business & Trading',
-    'Manufacturing & Services',
-    'Artisans & Craftsmen',
-    'Women Rural Livelihoods',
-    'General Business Registration',
+  const categoryFilters = [
+    { id: 'All', label: t.schemes?.categories?.all || 'All' },
+    { id: 'Small Business & Trading', label: t.schemes?.categories?.smallBusiness || 'Small Business & Trading' },
+    { id: 'Manufacturing & Services', label: t.schemes?.categories?.manufacturing || 'Manufacturing & Services' },
+    { id: 'Artisans & Craftsmen', label: t.schemes?.categories?.artisans || 'Artisans & Craftsmen' },
+    { id: 'Women Rural Livelihoods', label: t.schemes?.categories?.women || 'Women Rural Livelihoods' },
+    { id: 'General Business Registration', label: t.schemes?.categories?.registration || 'General Business Registration' },
   ];
 
   // =========================
@@ -53,20 +54,20 @@ const Schemes = () => {
         setLoading(true);
         setError('');
 
-        const res = await schemeService.getSchemes();
+        const res = await schemeService.getSchemes({ lang: currentLanguage });
 
         if (res?.success) {
-          setSchemes(res.schemes || []);
+          setSchemes(res.schemes || res.data || []);
         } else {
           setError(
-            res?.message || 'Failed to load government schemes.'
+            res?.message || t.schemes?.loadError || 'Failed to load government schemes.'
           );
         }
       } catch (err) {
         console.error('Error loading schemes:', err);
 
         setError(
-          'Unable to load government schemes. Please try again.'
+          t.schemes?.loadError || 'Unable to load government schemes. Please try again.'
         );
       } finally {
         setLoading(false);
@@ -74,7 +75,7 @@ const Schemes = () => {
     };
 
     loadSchemes();
-  }, []);
+  }, [currentLanguage]);
 
   // =========================
   // NORMALIZE SCHEME DATA
@@ -103,62 +104,70 @@ const Schemes = () => {
   // =========================
 
   const getSchemeDetails = (scheme) => {
+    const localized = getLocalizedScheme(scheme, currentLanguage);
     return {
-      ...scheme,
+      ...localized,
 
-      id: scheme.id,
+      id: localized.id || localized._id,
 
       shortName:
-        scheme.shortName ||
-        scheme.short_name ||
-        scheme.name ||
+        localized.shortName ||
+        localized.short_name ||
+        localized.name ||
+        t.schemes?.title ||
         'Government Scheme',
 
       ministry:
-        scheme.ministry ||
+        localized.ministry ||
         'Government of India',
 
       state:
-        scheme.state ||
+        localized.state ||
+        t.schemes?.tags?.allIndia ||
         'All India',
 
       maxLoan:
-        scheme.maxLoan ||
-        scheme.max_loan ||
+        localized.maxLoan ||
+        localized.max_loan ||
+        t.schemes?.card?.seePortal ||
         'See official portal',
 
       subsidy:
-        scheme.subsidy ||
+        localized.subsidy ||
+        t.schemes?.card?.seePortal ||
         'See official portal',
 
       eligibility:
-        Array.isArray(scheme.eligibility)
-          ? scheme.eligibility
+        Array.isArray(localized.eligibility) && localized.eligibility.length > 0
+          ? localized.eligibility
           : [
-              'Please check the official scheme portal for current eligibility criteria.',
+              t.schemes?.card?.seePortal ||
+                'Please check the official scheme portal for current eligibility criteria.',
             ],
 
       documents:
-        Array.isArray(scheme.documents)
-          ? scheme.documents
+        Array.isArray(localized.documents) && localized.documents.length > 0
+          ? localized.documents
           : [
-              'Please check the official scheme portal for required documents.',
+              t.schemes?.card?.seePortal ||
+                'Please check the official scheme portal for required documents.',
             ],
 
       benefits:
-        Array.isArray(scheme.benefits)
-          ? scheme.benefits
+        Array.isArray(localized.benefits) && localized.benefits.length > 0
+          ? localized.benefits
           : [
-              'Please check the official scheme portal for current benefits.',
+              t.schemes?.card?.seePortal ||
+                'Please check the official scheme portal for current benefits.',
             ],
 
       officialSource:
-        scheme.officialSource ||
-        scheme.official_website ||
+        localized.officialSource ||
+        localized.official_website ||
         '#',
 
       description:
-        scheme.description ||
+        localized.description ||
         'Scheme details are available on the official government portal.',
     };
   };
@@ -167,14 +176,76 @@ const Schemes = () => {
   // FILTER SCHEMES
   // =========================
 
+  const matchesCategory = (scheme, catId) => {
+    if (!catId || catId === 'All') return true;
+    const cat = (scheme.category || '').toLowerCase();
+    const origCat = (scheme.original_category || '').toLowerCase();
+    const target = catId.toLowerCase();
+
+    if (cat === target || origCat === target) return true;
+    if (cat.includes(target) || origCat.includes(target)) return true;
+
+    if (catId === 'Small Business & Trading') {
+      return (
+        cat.includes('small business') ||
+        cat.includes('trading') ||
+        cat.includes('చిన్న వ్యాపారాలు') ||
+        cat.includes('వాణిజ్యం') ||
+        cat.includes('लघु व्यवसाय') ||
+        origCat.includes('small business') ||
+        origCat.includes('trading')
+      );
+    }
+    if (catId === 'Manufacturing & Services') {
+      return (
+        cat.includes('manufacturing') ||
+        cat.includes('service') ||
+        cat.includes('తయారీ') ||
+        cat.includes('సేవలు') ||
+        cat.includes('विनिर्माण') ||
+        origCat.includes('manufacturing') ||
+        origCat.includes('service')
+      );
+    }
+    if (catId === 'Artisans & Craftsmen') {
+      return (
+        cat.includes('artisan') ||
+        cat.includes('craft') ||
+        cat.includes('చేతివృత్తులు') ||
+        cat.includes('కళాకారులు') ||
+        cat.includes('कारीगर') ||
+        origCat.includes('artisan') ||
+        origCat.includes('craft')
+      );
+    }
+    if (catId === 'Women Rural Livelihoods') {
+      return (
+        cat.includes('women') ||
+        cat.includes('livelihood') ||
+        cat.includes('మహిళా') ||
+        cat.includes('జీవనోపాధి') ||
+        cat.includes('महिला') ||
+        origCat.includes('women')
+      );
+    }
+    if (catId === 'General Business Registration') {
+      return (
+        cat.includes('registration') ||
+        cat.includes('రిజిస్ట్రేషన్') ||
+        cat.includes('पंजीकरण') ||
+        origCat.includes('registration')
+      );
+    }
+
+    return false;
+  };
+
   const filteredSchemes = schemes
     .map(getSchemeDetails)
     .filter((scheme) => {
       const search = searchTerm.toLowerCase().trim();
 
-      const matchCategory =
-        selectedCategory === 'All' ||
-        scheme.category === selectedCategory;
+      const matchCategory = matchesCategory(scheme, selectedCategory);
 
       const matchSearch =
         !search ||
@@ -244,7 +315,9 @@ const Schemes = () => {
         <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg shadow-orange-500/10">
           <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-bold text-white mb-2">
             <ShieldCheck className="w-4 h-4 text-emerald-300" />
-            <span>VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER</span>
+            <span>
+              {t.schemes?.verifiedBadge || 'VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER'}
+            </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -262,11 +335,11 @@ const Schemes = () => {
           <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4" />
 
           <p className="text-sm font-bold text-slate-700">
-            Loading government schemes...
+            {t.schemes?.loading || 'Loading government schemes...'}
           </p>
 
           <p className="text-xs text-slate-400 mt-1">
-            Fetching verified scheme information.
+            {t.schemes?.fetching || 'Fetching verified scheme information.'}
           </p>
         </div>
       </div>
@@ -286,7 +359,7 @@ const Schemes = () => {
             <ShieldCheck className="w-4 h-4 text-emerald-300" />
 
             <span>
-              VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER
+              {t.schemes?.verifiedBadge || 'VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER'}
             </span>
           </div>
 
@@ -303,7 +376,7 @@ const Schemes = () => {
           </div>
 
           <h2 className="text-lg font-black text-slate-900">
-            Unable to load schemes
+            {t.schemes?.loadError || 'Unable to load schemes'}
           </h2>
 
           <p className="text-sm text-slate-500 mt-2">
@@ -315,7 +388,7 @@ const Schemes = () => {
             onClick={() => window.location.reload()}
             className="mt-5 px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition-colors"
           >
-            Try Again
+            {t.schemes?.tryAgain || 'Try Again'}
           </button>
 
         </div>
@@ -340,7 +413,7 @@ const Schemes = () => {
           <ShieldCheck className="w-4 h-4 text-emerald-300" />
 
           <span>
-            VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER
+            {t.schemes?.verifiedBadge || 'VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER'}
           </span>
         </div>
 
@@ -362,18 +435,18 @@ const Schemes = () => {
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
 
-        {categories.map((cat) => (
+        {categoryFilters.map((cat) => (
           <button
-            key={cat}
+            key={cat.id}
             type="button"
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => setSelectedCategory(cat.id)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-              selectedCategory === cat
+              selectedCategory === cat.id
                 ? 'bg-orange-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
             }`}
           >
-            {cat}
+            {cat.label}
           </button>
         ))}
 
@@ -409,9 +482,8 @@ const Schemes = () => {
         <p className="text-xs font-semibold text-slate-500">
           {filteredSchemes.length}{' '}
           {filteredSchemes.length === 1
-            ? 'scheme'
-            : 'schemes'}{' '}
-          available
+            ? (t.schemes?.schemeAvailable || 'scheme available')
+            : (t.schemes?.schemesAvailable || 'schemes available')}
         </p>
 
         {searchTerm && (
@@ -420,7 +492,7 @@ const Schemes = () => {
             onClick={() => setSearchTerm('')}
             className="text-xs font-bold text-orange-600 hover:text-orange-700"
           >
-            Clear Search
+            {t.schemes?.clearSearch || 'Clear Search'}
           </button>
         )}
 
@@ -438,11 +510,12 @@ const Schemes = () => {
           </div>
 
           <h2 className="text-lg font-black text-slate-900">
-            No schemes found
+            {t.schemes?.noSchemesFound || 'No schemes found'}
           </h2>
 
           <p className="text-sm text-slate-500 mt-2">
-            Try another search keyword or choose a different category.
+            {t.schemes?.noSchemesDesc ||
+              'Try another search keyword or choose a different category.'}
           </p>
 
         </div>
@@ -468,11 +541,15 @@ const Schemes = () => {
                 <div className="flex items-start justify-between gap-3">
 
                   <span className="text-[11px] font-bold text-orange-700 bg-orange-50 px-2.5 py-0.5 rounded-full uppercase">
-                    {scheme.category || 'Government Scheme'}
+                    {scheme.category || t.schemes?.title || 'Government Scheme'}
                   </span>
 
                   <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    {scheme.state}
+                    {scheme.state === 'All India'
+                      ? (t.schemes?.tags?.allIndia || scheme.state)
+                      : scheme.state === 'Andhra Pradesh'
+                      ? (t.schemes?.tags?.andhraPradesh || scheme.state)
+                      : scheme.state}
                   </span>
 
                 </div>
@@ -511,7 +588,7 @@ const Schemes = () => {
                   <div className="p-3 bg-slate-50 rounded-2xl">
 
                     <span className="text-[10px] text-slate-400 uppercase font-bold">
-                      Max Loan / Grant
+                      {t.schemes?.card?.maxLoan || 'Max Loan / Grant'}
                     </span>
 
                     <p className="text-xs sm:text-sm font-black text-slate-900 mt-0.5">
@@ -523,7 +600,7 @@ const Schemes = () => {
                   <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-100">
 
                     <span className="text-[10px] text-amber-800 uppercase font-bold">
-                      Subsidy Support
+                      {t.schemes?.card?.subsidy || 'Subsidy Support'}
                     </span>
 
                     <p className="text-xs sm:text-sm font-bold text-amber-900 mt-0.5">
@@ -543,7 +620,7 @@ const Schemes = () => {
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
 
                     <span>
-                      Key Eligibility
+                      {t.schemes?.card?.keyEligibility || 'Key Eligibility'}
                     </span>
 
                   </h4>
@@ -608,7 +685,7 @@ const Schemes = () => {
                   </a>
                 ) : (
                   <span className="px-3 py-1.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold">
-                    Official Portal Unavailable
+                    {t.schemes?.officialSourceUnavailable || 'Official Portal Unavailable'}
                   </span>
                 )}
 
@@ -633,6 +710,7 @@ const Schemes = () => {
         }}
         title={
           activeModalScheme?.name ||
+          t.schemes?.title ||
           'Scheme Details'
         }
       >
@@ -652,7 +730,7 @@ const Schemes = () => {
                   <Sparkles className="w-4 h-4 text-orange-600" />
 
                   <span>
-                    AI Simple Explanation
+                    {t.schemes?.modal?.aiExplain || 'AI Simple Explanation'}
                   </span>
 
                 </span>
@@ -674,7 +752,7 @@ const Schemes = () => {
                 <Info className="w-4 h-4 text-orange-600" />
 
                 <h4 className="font-bold text-slate-900">
-                  About This Scheme
+                  {t.schemes?.modal?.aboutScheme || 'About This Scheme'}
                 </h4>
 
               </div>
@@ -693,7 +771,7 @@ const Schemes = () => {
 
                 <FileText className="w-4 h-4 text-orange-600" />
 
-                Required Documents
+                {t.schemes?.modal?.requiredDocs || 'Required Documents'}
 
               </h4>
 
@@ -716,7 +794,7 @@ const Schemes = () => {
             <div>
 
               <h4 className="font-bold text-slate-900 mb-1">
-                Benefits & Subsidies
+                {t.schemes?.modal?.benefitsSubsidies || 'Benefits & Subsidies'}
               </h4>
 
               <ul className="list-disc pl-5 space-y-1 text-slate-600">
@@ -746,7 +824,7 @@ const Schemes = () => {
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-center block transition-colors shadow-sm"
                 >
-                  Open Official Portal (
+                  {t.schemes?.modal?.openPortal || 'Open Official Portal'} (
                   {activeModalScheme.shortName}
                   )
                 </a>
@@ -754,7 +832,7 @@ const Schemes = () => {
               ) : (
 
                 <div className="w-full py-3 bg-slate-100 text-slate-500 font-bold rounded-xl text-center">
-                  Official portal information is not available.
+                  {t.schemes?.modal?.portalUnavailable || 'Official portal information is not available.'}
                 </div>
 
               )}

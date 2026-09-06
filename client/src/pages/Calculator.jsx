@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext.jsx';
 import { calculatorService } from '../services/api.js';
 import { formatCurrency } from '../utils/formatters.js';
@@ -24,29 +24,99 @@ const Calculator = () => {
   const [transportCost, setTransportCost] = useState(0);
   const [otherCost, setOtherCost] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
+  const [marginInput, setMarginInput] = useState('0');
 
-  const [result, setResult] = useState(null);
   const [aiExplanation, setAiExplanation] = useState(null);
   const [explaining, setExplaining] = useState(false);
+  const lastEditedRef = useRef('price');
 
-  // Deterministic local computation
-  useEffect(() => {
-    const compute = async () => {
-      const res = await calculatorService.calculate({
-        productName,
-        materialCost,
-        labourCost,
-        packagingCost,
-        transportCost,
-        otherCost,
-        sellingPrice
-      });
-      if (res && res.data) {
-        setResult(res.data);
+  // Total unit production cost
+  const totalProductionCost =
+    Number(materialCost || 0) +
+    Number(labourCost || 0) +
+    Number(packagingCost || 0) +
+    Number(transportCost || 0) +
+    Number(otherCost || 0);
+
+  // Synchronous, deterministic computation of derived metrics
+  const profit = Number((sellingPrice - totalProductionCost).toFixed(2));
+  const calculatedMargin =
+    sellingPrice > 0
+      ? Number(((profit / sellingPrice) * 100).toFixed(1))
+      : 0;
+  const markup =
+    totalProductionCost > 0
+      ? Number(((profit / totalProductionCost) * 100).toFixed(1))
+      : 0;
+  const breakEvenUnits = profit > 0 ? Math.ceil(5000 / profit) : 0;
+
+  const result = {
+    productName: productName || 'Custom Product',
+    materialCost,
+    labourCost,
+    packagingCost,
+    transportCost,
+    otherCost,
+    totalCost: totalProductionCost,
+    sellingPrice,
+    profit,
+    profitMargin: calculatedMargin,
+    markup,
+    breakEvenUnits,
+    isHealthy: calculatedMargin >= 25
+  };
+
+  // Bidirectional updates: Selling Price -> Profit Margin
+  const handleSellingPriceChange = (val) => {
+    lastEditedRef.current = 'price';
+    const price = val === '' ? 0 : Math.max(0, Number(val));
+    setSellingPrice(price);
+
+    if (price > 0) {
+      const p = price - totalProductionCost;
+      const m = (p / price) * 100;
+      setMarginInput(Number(m.toFixed(1)).toString());
+    } else {
+      setMarginInput('0');
+    }
+  };
+
+  // Bidirectional updates: Target Profit Margin -> Selling Price
+  const handleMarginChange = (val) => {
+    lastEditedRef.current = 'margin';
+    setMarginInput(val);
+
+    if (val === '' || val === '-') {
+      return;
+    }
+
+    const margin = parseFloat(val);
+    if (!isNaN(margin)) {
+      if (margin < 100) {
+        if (totalProductionCost > 0) {
+          const calculatedPrice = Math.round((totalProductionCost / (1 - margin / 100)) * 100) / 100;
+          setSellingPrice(Math.max(0, calculatedPrice));
+        }
       }
-    };
-    compute();
-  }, [productName, materialCost, labourCost, packagingCost, transportCost, otherCost, sellingPrice]);
+    }
+  };
+
+  // Recalculate dependent variable when any cost input changes
+  useEffect(() => {
+    if (lastEditedRef.current === 'margin') {
+      const margin = parseFloat(marginInput);
+      if (!isNaN(margin) && margin < 100 && totalProductionCost > 0) {
+        const calculatedPrice = Math.round((totalProductionCost / (1 - margin / 100)) * 100) / 100;
+        setSellingPrice(Math.max(0, calculatedPrice));
+      }
+    } else {
+      if (sellingPrice > 0) {
+        const p = sellingPrice - totalProductionCost;
+        const m = (p / sellingPrice) * 100;
+        setMarginInput(Number(m.toFixed(1)).toString());
+      }
+    }
+  }, [totalProductionCost]);
 
   const handleExplainWithAi = () => {
     setExplaining(true);
@@ -174,19 +244,43 @@ const Calculator = () => {
           </div>
 
           {/* Selling Price Target */}
-          <div className="pt-4 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-900 mb-1.5 flex items-center justify-between">
-              <span>{t.calculator?.sellingPrice || 'Your Selling Price (₹)'}</span>
-              <span className="text-orange-600 font-extrabold text-base">{formatCurrency(sellingPrice)}</span>
-            </label>
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  {t.calculator?.sellingPrice || 'Your Selling Price (₹)'}
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  Adjust price or edit target margin on the right
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-xl px-3 py-1.5 w-fit">
+                <span className="text-xs font-bold text-orange-700">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={sellingPrice === 0 ? '' : sellingPrice}
+                  placeholder="0"
+                  onChange={(e) => handleSellingPriceChange(e.target.value)}
+                  className="w-28 bg-transparent text-right text-base font-extrabold text-orange-600 focus:outline-none"
+                />
+              </div>
+            </div>
             <input
               type="range"
-              min={materialCost + labourCost}
-              max={350}
-              value={sellingPrice}
-              onChange={(e) => setSellingPrice(Number(e.target.value))}
+              min={0}
+              max={Math.max(500, Math.ceil(totalProductionCost * 3), Math.ceil(Number(sellingPrice || 0) * 1.5))}
+              step="1"
+              value={sellingPrice || 0}
+              onChange={(e) => handleSellingPriceChange(e.target.value)}
               className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
             />
+            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+              <span>Cost: {formatCurrency(totalProductionCost)}</span>
+              <span>1.5x Cost: {formatCurrency(totalProductionCost * 1.5)}</span>
+              <span>2x Cost: {formatCurrency(totalProductionCost * 2)}</span>
+            </div>
           </div>
         </div>
 
@@ -218,13 +312,33 @@ const Calculator = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                    <span className="text-[11px] font-bold text-emerald-800 uppercase">
-                      {t.calculator?.profitMargin || 'Profit Margin'}
+                  <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100 text-center flex flex-col justify-between">
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+                        {t.calculator?.profitMargin || 'Profit Margin'}
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-200/60 px-1.5 py-0.5 rounded-md">
+                        Editable
+                      </span>
+                    </div>
+                    <div className="relative inline-flex items-center justify-center my-0.5">
+                      <input
+                        type="number"
+                        step="0.5"
+                        max="99.9"
+                        value={marginInput}
+                        placeholder="0"
+                        onChange={(e) => handleMarginChange(e.target.value)}
+                        className="w-full text-center text-2xl font-black text-emerald-700 bg-white/90 border border-emerald-300/80 rounded-xl py-1 pr-6 pl-2 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all shadow-inner"
+                        title="Enter target profit margin % to auto-calculate selling price"
+                      />
+                      <span className="absolute right-2.5 text-base font-black text-emerald-600 pointer-events-none">
+                        %
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-emerald-700/80 mt-1 font-medium leading-tight">
+                      Edit % to auto-set price
                     </span>
-                    <p className="text-2xl font-black text-emerald-700 mt-0.5">
-                      {result.profitMargin}%
-                    </p>
                   </div>
 
                   <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-100 text-center">

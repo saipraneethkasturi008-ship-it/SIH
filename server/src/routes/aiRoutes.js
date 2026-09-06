@@ -6,7 +6,8 @@ const {
   chatWithAI,
   getBusinessRecommendation,
   getBusinessAreaOpportunities,
-  generateMarketingContent
+  generateMarketingContent,
+  generateProductImage
 } = require("../controllers/aicontroller");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -28,6 +29,12 @@ router.post(
   "/marketing",
   authMiddleware,
   generateMarketingContent
+);
+
+router.post(
+  "/product-image",
+  authMiddleware,
+  generateProductImage
 );
 
 module.exports = router;

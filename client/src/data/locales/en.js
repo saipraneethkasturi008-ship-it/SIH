@@ -205,16 +205,52 @@ export default {
     copied: "Copied!"
   },
   schemes: {
+    verifiedBadge: "VERIFIED STRUCTURED GOVERNMENT SCHEME LAYER",
     title: "Verified Government Schemes & Subsidies",
     subtitle: "Official central and state schemes for micro and small enterprises with verified eligibility criteria.",
     searchPlaceholder: "Search schemes by keyword, trade, or category...",
     filterCategory: "Filter by Category",
     allCategories: "All Categories",
-    officialSource: "Official Government Portal",
-    eligibility: "Eligibility",
-    benefits: "Subsidies & Benefits",
-    documents: "Required Documents",
-    explainWithAi: "Explain in Simple Words"
+    schemesAvailable: "schemes available",
+    schemeAvailable: "scheme available",
+    clearSearch: "Clear Search",
+    noSchemesFound: "No schemes found",
+    noSchemesDesc: "Try another search keyword or choose a different category.",
+    officialSource: "Official Portal",
+    officialSourceUnavailable: "Official Portal Unavailable",
+    explainWithAi: "Explain in Simple Words",
+    loading: "Loading government schemes...",
+    fetching: "Fetching verified scheme information.",
+    loadError: "Unable to load government schemes. Please try again.",
+    tryAgain: "Try Again",
+    categories: {
+      all: "All",
+      smallBusiness: "Small Business & Trading",
+      manufacturing: "Manufacturing & Services",
+      artisans: "Artisans & Craftsmen",
+      women: "Women Rural Livelihoods",
+      registration: "General Business Registration",
+      foodProcessing: "Food Processing"
+    },
+    tags: {
+      allIndia: "All India",
+      andhraPradesh: "Andhra Pradesh"
+    },
+    card: {
+      maxLoan: "Max Loan / Grant",
+      subsidy: "Subsidy Support",
+      keyEligibility: "Key Eligibility",
+      seePortal: "See official portal"
+    },
+    modal: {
+      aiExplain: "AI Simple Explanation",
+      aboutScheme: "About This Scheme",
+      requiredDocs: "Required Documents",
+      benefitsSubsidies: "Benefits & Subsidies",
+      openPortal: "Open Official Portal",
+      portalUnavailable: "Official portal information is not available.",
+      close: "Close"
+    }
   },
   assistant: {
     title: "AI Business Operating Assistant",

@@ -1096,6 +1096,110 @@ Use exactly this structure:
 };
 
 // =====================================================
+// GENERATE PRODUCT IMAGE (SVG / ART)
+// POST /api/ai/product-image
+// =====================================================
+
+const generateProductImage = async (req, res) => {
+  try {
+    const { product, discount, prompt } = req.body;
+
+    if (!product) {
+      return res.status(400).json({
+        success: false,
+        message: "Product name is required"
+      });
+    }
+
+    const safeProduct = String(product).replace(/[<>&"]/g, "").trim();
+    const safeDiscount = discount ? String(discount).replace(/[<>&"]/g, "").trim() : "";
+
+    // Build vector illustration for the product
+    const svgCode = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="artBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="50%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <radialGradient id="artGlow" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#fb923c" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#fed7aa" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7c2d12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" rx="36" fill="url(#artBg)"/>
+  <circle cx="400" cy="270" r="230" fill="url(#artGlow)"/>
+
+  <!-- Decorative sunburst ring -->
+  <circle cx="400" cy="260" r="175" fill="#ffffff" stroke="#f59e0b" stroke-width="4" stroke-dasharray="10 5" opacity="0.9" filter="url(#dropShadow)"/>
+
+  <!-- Authentic Product Vessel / Hamper Art -->
+  <g transform="translate(400, 260) scale(1.15)">
+    <!-- Jar Body -->
+    <rect x="-70" y="-55" width="140" height="150" rx="28" fill="#ea580c" stroke="#9a3412" stroke-width="5" filter="url(#dropShadow)"/>
+    <!-- Glass Highlight -->
+    <path d="M -50 -35 Q -30 -35 -30 70 L -45 65 Z" fill="#ffffff" opacity="0.25"/>
+    <!-- Traditional Lid Cloth -->
+    <path d="M -80 -60 Q 0 -85 80 -60 L 65 -35 Q 0 -45 -65 -35 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="3"/>
+    <!-- Jute Tie -->
+    <rect x="-55" y="-40" width="110" height="10" rx="5" fill="#ca8a04"/>
+    <circle cx="0" cy="-35" r="7" fill="#a16207"/>
+    <!-- Center Label -->
+    <circle cx="0" cy="25" r="42" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+    <text x="0" y="22" font-size="20" font-family="Arial, sans-serif" font-weight="900" fill="#9a3412" text-anchor="middle">PURE</text>
+    <text x="0" y="42" font-size="14" font-family="Arial, sans-serif" font-weight="bold" fill="#ea580c" text-anchor="middle">100%</text>
+  </g>
+
+  <!-- Sparkle Accents -->
+  <g fill="#f59e0b">
+    <path d="M 210 140 Q 225 155 240 140 Q 225 125 210 140 Z"/>
+    <path d="M 570 140 Q 585 155 600 140 Q 585 125 570 140 Z"/>
+    <path d="M 190 340 Q 200 350 210 340 Q 200 330 190 340 Z"/>
+    <path d="M 590 340 Q 600 350 610 340 Q 600 330 590 340 Z"/>
+  </g>
+
+  <!-- Offer Badge if present -->
+  ${safeDiscount ? `
+  <g transform="translate(610, 190) rotate(12)">
+    <circle cx="0" cy="0" r="50" fill="#dc2626" stroke="#ffffff" stroke-width="3" filter="url(#dropShadow)"/>
+    <text x="0" y="-8" font-size="13" font-family="Arial, sans-serif" font-weight="bold" fill="#fef08a" text-anchor="middle">SPECIAL</text>
+    <text x="0" y="12" font-size="17" font-family="Arial, sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">OFFER</text>
+  </g>
+  ` : ''}
+
+  <!-- Title Banner Ribbon -->
+  <g filter="url(#dropShadow)">
+    <rect x="140" y="450" width="520" height="66" rx="33" fill="#c2410c" stroke="#ffffff" stroke-width="3"/>
+    <text x="400" y="492" font-size="28" font-family="Arial, sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">${safeProduct.substring(0, 32)}</text>
+  </g>
+  <text x="400" y="550" font-size="19" font-family="Arial, sans-serif" font-weight="bold" fill="#b45309" text-anchor="middle">★ TRADITIONAL QUALITY • SUPPORT LOCAL ★</text>
+</svg>`;
+
+    const base64 = Buffer.from(svgCode).toString("base64");
+    const dataUrl = `data:image/svg+xml;base64,${base64}`;
+
+    return res.json({
+      success: true,
+      imageUrl: dataUrl,
+      source: "ai-generated",
+      prompt: prompt || `Authentic visual for ${product}`
+    });
+  } catch (error) {
+    console.error("Generate product image error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate product image.",
+      error: error.message
+    });
+  }
+};
+
+// =====================================================
 // EXPORT CONTROLLERS
 // =====================================================
 
@@ -1103,5 +1207,6 @@ module.exports = {
   chatWithAI,
   getBusinessRecommendation,
   getBusinessAreaOpportunities,
-  generateMarketingContent
+  generateMarketingContent,
+  generateProductImage
 };
