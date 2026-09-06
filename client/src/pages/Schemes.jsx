@@ -192,6 +192,13 @@ const Schemes = () => {
         cat.includes('చిన్న వ్యాపారాలు') ||
         cat.includes('వాణిజ్యం') ||
         cat.includes('लघु व्यवसाय') ||
+        cat.includes('व्यापार') ||
+        cat.includes('சிறு வணிகம்') ||
+        cat.includes('வர்த்தகம்') ||
+        cat.includes('ಸಣ್ಣ ವ್ಯಾಪಾರ') ||
+        cat.includes('ವಾಣಿಜ್ಯ') ||
+        cat.includes('ചെറുകിട ബിസിനസ്സ്') ||
+        cat.includes('വ്യാപാരം') ||
         origCat.includes('small business') ||
         origCat.includes('trading')
       );
@@ -203,6 +210,13 @@ const Schemes = () => {
         cat.includes('తయారీ') ||
         cat.includes('సేవలు') ||
         cat.includes('विनिर्माण') ||
+        cat.includes('सेवाएं') ||
+        cat.includes('உற்பத்தி') ||
+        cat.includes('சேவைகள்') ||
+        cat.includes('ಉತ್ಪಾದನೆ') ||
+        cat.includes('ಸೇವೆಗಳು') ||
+        cat.includes('ഉൽപാദനം') ||
+        cat.includes('സേവനങ്ങൾ') ||
         origCat.includes('manufacturing') ||
         origCat.includes('service')
       );
@@ -214,6 +228,13 @@ const Schemes = () => {
         cat.includes('చేతివృత్తులు') ||
         cat.includes('కళాకారులు') ||
         cat.includes('कारीगर') ||
+        cat.includes('शिल्पकार') ||
+        cat.includes('கைவினைஞர்கள்') ||
+        cat.includes('தொழிலாளர்கள்') ||
+        cat.includes('ಕುಶಲಕರ್ಮಿಗಳು') ||
+        cat.includes('ಕರಕುಶಲತೆ') ||
+        cat.includes('കരകൗശല വിദഗ്ദ്ധർ') ||
+        cat.includes('പരമ്പരാഗത') ||
         origCat.includes('artisan') ||
         origCat.includes('craft')
       );
@@ -225,6 +246,13 @@ const Schemes = () => {
         cat.includes('మహిళా') ||
         cat.includes('జీవనోపాధి') ||
         cat.includes('महिला') ||
+        cat.includes('आजीविका') ||
+        cat.includes('பெண்கள்') ||
+        cat.includes('வாழ்வாதாரம்') ||
+        cat.includes('ಮಹಿಳಾ') ||
+        cat.includes('ಜೀವನೋಪಾಯ') ||
+        cat.includes('വനിതാ') ||
+        cat.includes('ഉപജീവനം') ||
         origCat.includes('women')
       );
     }
@@ -233,6 +261,9 @@ const Schemes = () => {
         cat.includes('registration') ||
         cat.includes('రిజిస్ట్రేషన్') ||
         cat.includes('पंजीकरण') ||
+        cat.includes('பதிவு') ||
+        cat.includes('ನೋಂದಣಿ') ||
+        cat.includes('രജിസ്ട്രേഷൻ') ||
         origCat.includes('registration')
       );
     }

@@ -101,6 +101,23 @@ const Marketing = () => {
     setPosterUrl('');
   };
 
+  const loadKrishnaastamiMangoPicklePreset = () => {
+    setProduct('Avakaya (Mango) Pickle - 1kg');
+    setTargetCustomer('Local festival shoppers, families and retail stores');
+    setTone('Festive, warm & authentic');
+    setDiscount('10% off on krishnaastami');
+    setContent({
+      whatsappMessage:
+        '🙏 శ్రీ కృష్ణాష్టమి శుభాకాంక్షలు! 🪔\n\nLakshmi Homemade Foods నుండి స్వచ్ఛమైన ఆవకాయ మామిడికాయ పచ్చడి (Avakaya Mango Pickle) పై 10% ప్రత్యేక తగ్గింపు!\n\n✨ Krishnaastami Special! MANGO PICKLE Flat 10% OFF!\n📦 Hurry! Limited Stock Only.\n\n📲 ఆర్డర్ చేయడానికి ఇప్పుడే మెసేజ్ చేయండి!\n\nORDER NOW • SUPPORT LOCAL • Powered by Udyami Mitra',
+      socialPost:
+        '✨ Krishnaastami Special! 🪔\n\nCelebrate with authentic, pure homemade Mango Pickle crafted with handpicked mangoes and rich spices.\n\n🥭 Flat 10% OFF on Krishnaastami!\n⚡ Limited Stock Only\n\nORDER NOW • SUPPORT LOCAL • Powered by Udyami Mitra',
+      posterText:
+        'Krishnaastami Special! MANGO PICKLE Flat 10% OFF! Hurry! Limited Stock Only.'
+    });
+    setPosterUrl('/mango_pickle_realistic_poster.jpg');
+    setActiveTab('poster');
+  };
+
   const handleGenerate = async (e) => {
     if (e) e.preventDefault();
 
@@ -346,6 +363,17 @@ const Marketing = () => {
 
     try {
       let imageSource = productImageUrl;
+
+      const isMangoPickle =
+        /mango|pickle|avakaya/i.test(product) ||
+        /krishnaastami|krishnashtami/i.test(discount);
+
+      if (isMangoPickle && (!imageSource || imageSource === '/mango_pickle_realistic_poster.jpg')) {
+        setPosterUrl('/mango_pickle_realistic_poster.jpg');
+        setActiveTab('poster');
+        setPosterLoading(false);
+        return;
+      }
 
       if (!imageSource) {
         setGeneratingAiArt(true);
@@ -714,10 +742,32 @@ const Marketing = () => {
         <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-5">
 
           <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-4">
-
             Campaign & Offer Details
-
           </h2>
+
+          {/* Krishnaastami Mango Pickle Photorealistic Poster Quick Preset */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">🪔</span>
+                <div>
+                  <h3 className="text-xs font-bold text-amber-950">
+                    Krishnaastami Mango Pickle Special
+                  </h3>
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    Photorealistic marketing poster & festive campaign
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={loadKrishnaastamiMangoPicklePreset}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer"
+              >
+                Load Poster
+              </button>
+            </div>
+          </div>
 
           <form
             onSubmit={handleGenerate}

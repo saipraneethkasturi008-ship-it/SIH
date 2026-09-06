@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import {
-  Store,
   Mail,
   LockKeyhole,
   Eye,
@@ -65,9 +64,11 @@ const Login = () => {
 
         {/* Branding */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-200 mb-4">
-            <Store className="w-8 h-8 text-white" />
-          </div>
+          <img
+            src="/logoimg.PNG"
+            alt="Vyapar Mitra Logo"
+            className="w-16 h-16 rounded-2xl mx-auto mb-4 object-contain shadow-md shadow-orange-100"
+          />
 
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
             Vyapar Mitra

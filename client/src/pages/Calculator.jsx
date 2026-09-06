@@ -126,6 +126,22 @@ const Calculator = () => {
           setAiExplanation(
             `మీ ఉత్పత్తి "${productName}" తయారీ ఖర్చు ₹${result.totalCost}. మీరు నిర్ణయించిన అమ్మకం ధర ₹${result.sellingPrice} ద్వారా వచ్చే లాభం ₹${result.profit} (${result.profitMargin}%). గ్రామీణ ఫుడ్ ప్రాసెసింగ్ వ్యాపారాలకు 25% పైగా లాభం ఉండటం చాలా ఆరోగ్యకరమైనది! ఈ ధరతో నష్టాలు రాకుండా ఉండాలంటే నెలకు కనీసం ${result.breakEvenUnits} యూనిట్లు అమ్మాలి.`
           );
+        } else if (currentLanguage === 'hi') {
+          setAiExplanation(
+            `आपके उत्पाद "${productName}" की उत्पादन लागत ₹${result.totalCost} है। विक्रय मूल्य ₹${result.sellingPrice} पर प्रति यूनिट लाभ ₹${result.profit} (${result.profitMargin}%) है। ग्रामीण व्यवसायों के लिए 25% से अधिक मार्जिन सुरक्षित और लाभदायक माना जाता है। लाभ में रहने के लिए आपको प्रति माह कम से कम ${result.breakEvenUnits} इकाइयाँ बेचनी होंगी।`
+          );
+        } else if (currentLanguage === 'ta') {
+          setAiExplanation(
+            `உங்கள் தயாரிப்பு "${productName}" தயாரிப்பு செலவு ₹${result.totalCost}. விற்பனை விலை ₹${result.sellingPrice} மூலம் கிடைக்கும் யூனிட் லாபம் ₹${result.profit} (${result.profitMargin}%). கிராமப்புற சிறு தொழில்களுக்கு 25% மேல் லாபம் இருப்பது மிகவும் சிறந்தது! நஷ்டம் ஏற்படாமல் இருக்க மாதம் குறைந்தது ${result.breakEvenUnits} யூனிட்டுகள் விற்க வேண்டும்.`
+          );
+        } else if (currentLanguage === 'kn') {
+          setAiExplanation(
+            `ನಿಮ್ಮ ಉತ್ಪನ್ನ "${productName}" ಉತ್ಪಾದನಾ ವೆಚ್ಚ ₹${result.totalCost}. ನೀವು ನಿಗದಿಪಡಿಸಿದ ಮಾರಾಟ ಬೆಲೆ ₹${result.sellingPrice} ಮೂಲಕ ಬರುವ ಲಾಭ ₹${result.profit} (${result.profitMargin}%). ಗ್ರಾಮೀಣ ಕಿರು ಉದ್ಯಮಗಳಿಗೆ 25% ಕ್ಕಿಂತ ಹೆಚ್ಚಿನ ಲಾಭಾಂಶವು ಸೂಕ್ತವಾಗಿದೆ! ನಷ್ಟವಿಲ್ಲದೆ ಮುನ್ನಡೆಯಲು ತಿಂಗಳಿಗೆ ಕನಿಷ್ಠ ${result.breakEvenUnits} ಯೂನಿಟ್ ಮಾರಾಟ ಮಾಡಬೇಕು.`
+          );
+        } else if (currentLanguage === 'ml') {
+          setAiExplanation(
+            `നിങ്ങളുടെ ഉൽപ്പന്നം "${productName}" നിർമ്മാണ ചെലവ് ₹${result.totalCost} ആണ്. വിൽപ്പന വില ₹${result.sellingPrice} ആകുമ്പോൾ ലഭിക്കുന്ന ലാഭം ₹${result.profit} (${result.profitMargin}%) ആണ്. ഗ്രാമീണ സംരംഭങ്ങൾക്ക് 25% ലധികം ലാഭം വളരെ അനുയോജ്യമാണ്! നഷ്ടം ഒഴിവാക്കാൻ പ്രതിമാസം കുറഞ്ഞത് ${result.breakEvenUnits} യൂണിറ്റുകൾ വിൽക്കണം.`
+          );
         } else {
           setAiExplanation(
             `Your total production cost for "${productName}" is ₹${result.totalCost}. At a selling price of ₹${result.sellingPrice}, you earn a healthy unit profit of ₹${result.profit} with a ${result.profitMargin}% margin. A margin between 25-35% is ideal for rural micro-enterprises to absorb unexpected ingredient price spikes. You need to sell at least ${result.breakEvenUnits} units per month to cover fixed shop and utility overheads.`
